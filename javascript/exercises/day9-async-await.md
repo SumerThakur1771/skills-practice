@@ -94,6 +94,34 @@ async function runAgeCheck() {
 runAgeCheck();
 ```
 
+## Doubts / Questions I had
+
+**Q: Why is it called "synchronous-looking," and what makes async/await actually better than Promises - is "too many .then() is confusing" the whole reason?**
+
+A: Important distinction first - async/await code is NOT actually synchronous. Under the hood it's still fully asynchronous, still using Promises, still non-blocking. "Synchronous-looking" refers only to how the code READS (top to bottom, like normal step-by-step code), not how it actually executes. JS still pauses that specific function at the await line and lets other code run elsewhere meanwhile.
+
+The full list of real reasons async/await is preferred (interview-ready):
+
+1. **Readability / avoiding "callback hell" or promise chain sprawl** - long .then().then().then() chains get visually nested and hard to trace, especially with conditional logic mixed in. Async/await reads like a normal function, top to bottom.
+
+2. **Unified error handling** - .then() chains use .catch(), a DIFFERENT mechanism from how errors are handled in regular synchronous code (try/catch). Async/await lets you use the SAME try/catch pattern used everywhere else in JS - one mental model instead of two separate systems.
+
+3. **Easier to mix with normal control flow (loops, conditionals)** - genuinely technical advantage, not just style. Writing a for loop where each iteration needs to wait for an async result is awkward with pure .then() chains (often requires manually building a promise chain). With await, it just works naturally inside a normal for loop:
+   ```js
+   async function processAll(items) {
+     for (const item of items) {
+       const result = await doSomethingAsync(item);
+       console.log(result);
+     }
+   }
+   ```
+
+4. **Easier debugging** - stack traces and breakpoints behave more predictably since code structure matches actual execution order, versus .then() callbacks which can make stack traces harder to trace back to their origin.
+
+**Common misconception to avoid in an interview:** async/await is NOT faster than Promises and does NOT change how concurrency actually works. It's syntax sugar over the exact same Promise mechanism - same performance, same underlying behavior underneath. Saying "async/await is faster" would be a wrong answer.
+
+**Interview-ready one-liner:** "Async/await is syntax sugar over Promises - same behavior underneath, not actually synchronous, still non-blocking. It's preferred because it reads top-to-bottom like normal code instead of nested .then() chains, it lets you use standard try/catch for errors instead of .catch(), and it's much easier to combine with normal control flow like loops and conditionals."
+
 ## Key takeaway (in my own words)
 
 A function that builds and returns a Promise doesn't need to be async or use await - it just constructs the Promise and returns it, same as always. Only the function that wants to WAIT for that promise's result needs to be marked async, so it can use await inside a try/catch to pause until the promise resolves or rejects.
