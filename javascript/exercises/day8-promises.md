@@ -85,13 +85,6 @@ Takes an array of promises, gives back a single promise that resolves once every
 
 Goal: checkAge(age) function that returns a Promise - resolves "You are an adult" if age >= 18, rejects "You are a minor" if under 18.
 
-**Mistakes made along the way and fixes:**
-
-1. Wrote `function checkAge(let age)` - invalid. Function parameters are bare names, never prefixed with let/const/var. Fixed to `function checkAge(age)`.
-2. Built the promise and called `.then`/`.catch` on a local variable called `promise` OUTSIDE the function - invalid, since `promise` was declared inside `checkAge` and doesn't exist in the outer scope. The function needs to `return` the promise, and the CALLER attaches `.then`/`.catch` to the function's return value, not to some internal variable name.
-3. Typo'd the function name (`checkage` vs `checkAge`) - JS is case-sensitive, names must match exactly.
-4. Initially forgot to actually CALL the function with `()` and an argument before chaining `.then` - `checkAge` is a function, calling `.then` on it directly (without calling it first) doesn't work since `.then` only exists on the promise it returns, not on the function itself.
-
 **Final correct code:**
 
 ```js
@@ -122,6 +115,20 @@ checkAge(15)
     console.log(error); // "You are a minor"
   });
 ```
+
+## Doubts / Questions I had
+
+**Q: Why doesn't function parameter syntax allow let/const, e.g. `function checkAge(let age)`?**
+
+A: Function parameters are bare names, never prefixed with let/const/var. Fixed `function checkAge(let age)` to `function checkAge(age)`.
+
+**Q: Why can't I call `.then`/`.catch` on a variable created inside the function, from outside the function?**
+
+A: Initially built the promise and called `.then`/`.catch` on a local variable called `promise` OUTSIDE the function - invalid, since `promise` was declared inside `checkAge` and doesn't exist in the outer scope (basic scope rule from Day 1). The function needs to `return` the promise, and the CALLER attaches `.then`/`.catch` to the function's return value, not to some internal variable name that only exists inside the function.
+
+**Q: Why doesn't calling `.then` directly on the function name work?**
+
+A: Initially forgot to actually CALL the function with `()` and an argument before chaining `.then` - `checkAge` is a function, calling `.then` on it directly (without calling it first) doesn't work since `.then` only exists on the PROMISE it returns, not on the function itself. Also typo'd the function name (`checkage` vs `checkAge`) along the way - JS is case-sensitive, names must match exactly.
 
 ## Key takeaway (in my own words)
 

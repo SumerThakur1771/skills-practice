@@ -61,7 +61,27 @@ car.honk();         // "Beep beep!" - car's own method, directly on car
 - `car.startEngine()` - JS checks car first, doesn't find startEngine there, walks up to car's prototype (vehicle), finds it there, runs it.
 - `car.honk()` - JS checks car first, finds honk right there directly (added with `car.honk = function(){...}`), runs it immediately without needing to walk the chain at all.
 
-**Mistake made along the way:** Initially tried to add `honk` using shorthand method syntax (`honk(){...}`) as a standalone statement outside any object - this isn't valid, since that shorthand only works inside an object literal `{ }`. Fixed by using `car.honk = function(){...}` to add a method onto an already-existing object using dot notation (same pattern as adding any property after object creation).
+## Doubts / Questions I had
+
+**Q: How do you add a method onto an object AFTER it's already been created, rather than inside the object literal?**
+
+A: Initially tried to add `honk` using shorthand method syntax (`honk(){...}`) as a standalone statement outside any object - this isn't valid, since that shorthand only works inside an object literal `{ }`. Fixed by using `car.honk = function(){...}` to add a method onto an already-existing object using dot notation - same pattern as adding any property after object creation, works for functions too since functions are just values in JS.
+
+**Q: Is the prototype chain basically the same as inheritance in Java?**
+
+A: Similar goal (reuse behavior across objects), but a genuinely different mechanism. Java uses class-based inheritance - a `class` is defined, and other classes `extend` it, set up at the class definition level before any objects exist. JavaScript uses prototype-based inheritance - there are no real "classes" underneath, even with modern `class` syntax (it's just a wrapper around prototypes). Individual OBJECTS link directly to other OBJECTS - any object can be the prototype for another, not limited to a rigid class hierarchy.
+
+```js
+class Animal {
+  makeSound() { console.log("Some generic sound"); }
+}
+class Dog extends Animal {
+  bark() { console.log("Woof!"); }
+}
+const dog = new Dog();
+```
+
+This looks like Java, but under the hood, `dog`'s prototype is `Dog.prototype`, and `Dog.prototype`'s prototype is `Animal.prototype` - the exact same prototype chain mechanism as the `Object.create` example, just with cleaner syntax on top. Saying "prototypes are just like Java inheritance" is a weaker interview answer than "class in JS is syntactic sugar over prototype-based inheritance, not real classical inheritance."
 
 ## Key takeaway (in my own words)
 

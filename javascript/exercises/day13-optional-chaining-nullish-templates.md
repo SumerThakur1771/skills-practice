@@ -22,24 +22,16 @@ Also works with function calls:
 user.greet?.(); // does nothing, no crash - greet doesn't exist, skips calling it entirely
 ```
 
-**Important: ?. is ONE single operator, not a separate ? plus a separate . after it.** It replaces the normal dot connector at the specific risky junction - doesn't need an additional dot after it before the property name.
+## My practice exercise
 
 ```js
-user.address.city   // normal: user . address . city (two connectors)
-user.address?.city  // safe:   user . address ?. city (still two connectors, one swapped for ?.)
+const item = "coffee";
+const price = 4.5;
+console.log(`You bought ${item} for ${price}`);
+// "You bought coffee for 4.5"
 ```
 
-**Where exactly does ?. go - the trickiest part to get right:**
-
-The crash doesn't happen ON the missing property itself - accessing a missing property (`user.address`) just evaluates to `undefined`, no crash. The crash happens on the NEXT step - trying to read a property OFF OF that undefined value (`undefined.city`). So `?.` needs to go on the connector immediately BEFORE the step that's actually risky - i.e., right before going one level deeper into something that might be undefined.
-
-```js
-user.address?.city
-```
-
-Read as: "Get user.address (safe, might just be undefined). NOW before going deeper into .city - check: is what I just got null/undefined? If yes, stop safely. If no, continue."
-
-`user` itself doesn't need `?.` here because `user` is a real, solid object - accessing `.address` on it is always safe. If `user` itself might also be null/undefined (e.g. from a failed API call), THEN you'd protect that step too: `user?.address?.city`.
+Note: if a literal $ sign is wanted before the price (e.g. "$4.5"), it must be typed as an actual character in the string - it's not automatically added: `` `You bought ${item} for $${price}` ``.
 
 ## Nullish Coalescing (??)
 
@@ -100,16 +92,30 @@ const multiLine = `Line one
 Line two`;
 ```
 
-## My practice exercise
+## Doubts / Questions I had
+
+**Q: In `user.address?.city`, shouldn't there be two dots - one for the `?.` and one before `city`, like `user.address?..city`?**
+
+A: `?.` is ONE single operator, not a separate `?` plus a separate `.` after it. It REPLACES the normal `.` connector at that specific point - doesn't need an additional dot after it before the property name.
 
 ```js
-const item = "coffee";
-const price = 4.5;
-console.log(`You bought ${item} for ${price}`);
-// "You bought coffee for 4.5"
+user.address.city   // normal: user . address . city (two connectors)
+user.address?.city  // safe:   user . address ?. city (still two connectors, one swapped for ?.)
 ```
 
-Note: if a literal $ sign is wanted before the price (e.g. "$4.5"), it must be typed as an actual character in the string - it's not automatically added: `` `You bought ${item} for $${price}` ``.
+**Q: Since `address` is the property that doesn't exist, shouldn't the `?.` go right after `user` instead - like `user?.address.city`?**
+
+A: This was the trickiest part to get right. The crash doesn't happen ON the missing property itself - accessing a missing property (`user.address`) just evaluates to `undefined`, no crash happens at that step. The crash happens on the NEXT step - trying to read a property OFF OF that undefined value (`undefined.city`). So `?.` needs to go on the connector immediately BEFORE the step that's actually risky - i.e., right before going one level deeper into something that might be undefined.
+
+```js
+user.address?.city
+```
+
+Read as: "Get user.address (safe, might just be undefined). NOW before going deeper into .city - check: is what I just got null/undefined? If yes, stop safely."
+
+`user` itself doesn't need `?.` here because `user` is a real, solid object - accessing `.address` on it is always safe. If `user` itself might ALSO be null/undefined (e.g. from a failed API call), THEN that step would need protecting too: `user?.address?.city`.
+
+The general rule: place `?.` at each specific junction that's actually at risk of being null/undefined, based on what's genuinely uncertain - not automatically at the very start of the whole chain.
 
 ## Key takeaway (in my own words)
 

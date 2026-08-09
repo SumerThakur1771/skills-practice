@@ -35,50 +35,6 @@ This is why Promises tend to run before setTimeout, even if the setTimeout was s
 
 Plain synchronous code never goes into any queue - it just executes immediately as JS reads through the code. The queues are exclusively for callback functions of things that had to wait somewhere else first.
 
-## What exactly IS "the event loop" - clearing up the confusion
-
-There's no line of code you write called `eventLoop()` - you never directly interact with it. The event loop is just the name for the constant background process the JS engine runs, repeatedly asking: "Is the call stack empty? If yes, check the microtask queue first - run everything there. Then check the callback queue - run the next item." It's a loop (literally repeats forever) that decides WHEN your queued-up async callbacks actually get executed. You never call it or write syntax for it - it's invisible machinery always running underneath your code.
-
-## Real code showing the actual pieces
-
-```js
-console.log("Start");
-
-setTimeout(() => {
-  console.log("Timeout callback");
-}, 0);
-
-Promise.resolve().then(() => {
-  console.log("Promise callback");
-});
-
-console.log("End");
-```
-
-- `console.log("Start")` / `console.log("End")` - plain code, Category 1, runs on call stack directly
-- `setTimeout(() => {...}, 0)` - calling a Web API function, handing it a callback to run later
-- `Promise.resolve().then(() => {...})` - creating an already-resolved Promise, .then schedules its callback for later
-
-None of this code explicitly mentions "event loop" anywhere - it's invisible. It's just the process that decides WHEN each queued callback actually gets pulled and run.
-
-Flow: JS runs code top to bottom hitting the call stack directly for normal lines -> when it hits setTimeout or .then, it registers the callback to run later instead of running it immediately, and moves on -> once ALL normal code has finished (call stack empty) -> THIS is where the event loop's checking process kicks in, draining microtask queue first, then callback queue.
-
-## Why Promises get the Microtask Queue and setTimeout gets the Callback Queue
-
-The real distinction is "microtask" vs "macrotask," based on how urgent/lightweight the result is expected to be.
-
-**Microtasks** = Promises (.then, .catch, .finally) and async/await continuations. Treated as high-priority, should-run-ASAP work - because a resolved Promise represents "I already have the answer, I just need to hand it off," and the JS spec designers wanted that handoff to happen immediately, before the browser does anything else (like rendering or running a timer).
-
-**Macrotasks** (regular Callback Queue) = setTimeout, setInterval, DOM events (clicks, etc.), other browser-scheduled work. Treated as lower-priority, can-wait-its-turn work.
-
-**Why Promises get "urgent" treatment:** once a Promise resolves, it represents "I have already finished, here is your value, right now." The designers wanted resolving a Promise to feel as close to instant as possible once ready - you shouldn't have to wait behind a setTimeout scheduled for later, or a browser render cycle, just because both became "ready" around the same moment.
-
-setTimeout, by contrast, is inherently about SCHEDULING something for later - its whole purpose is "wait some time, then run this." It was never designed to compete for "run this immediately" priority the way Promises were.
-
-**Practical consequence:** if Promises had to share the same queue as setTimeout callbacks, pending timers could delay already-finished async data from being processed, even though that data was ready to use right now. Giving Promises their own faster lane avoids that unnecessary delay.
-
-**Interview-ready one-liner:** "Promises are treated as microtasks because they represent work that just finished and should be handled immediately, while setTimeout is a macrotask because it's explicitly about waiting/scheduling for later - so the spec gives Promises a faster, priority queue that runs before the regular one."
-
 ## Traced example - solved correctly myself
 
 ```js
@@ -97,6 +53,36 @@ Step by step:
 - Microtask Queue now empty. Event loop checks regular Callback Queue -> runs it -> logs B
 
 **Output: A, D, C, B**
+
+## Doubts / Questions I had
+
+**Q: What exactly IS "the event loop" - I don't see any code syntax for it, where is it?**
+
+A: There's no line of code written called `eventLoop()` - never directly interacted with. The event loop is just the name for the constant background process the JS engine runs, repeatedly asking: "Is the call stack empty? If yes, check the microtask queue first - run everything there. Then check the callback queue - run the next item." It's a loop (literally repeats forever) that decides WHEN queued-up async callbacks actually get executed. Invisible machinery, always running underneath the code:
+
+```js
+console.log("Start");
+setTimeout(() => { console.log("Timeout callback"); }, 0);
+Promise.resolve().then(() => { console.log("Promise callback"); });
+console.log("End");
+```
+None of this code explicitly mentions "event loop" anywhere - it's the process that decides WHEN each queued callback actually gets pulled and run, not something written directly.
+
+**Q: Why do Promise/async-await go to the Microtask Queue while setTimeout goes to the regular Callback Queue - why the different treatment?**
+
+A: The real distinction is "microtask" vs "macrotask," based on how urgent/lightweight the result is expected to be.
+
+Microtasks (Promises, async/await) = high-priority, should-run-ASAP work, because a resolved Promise represents "I already have the answer, I just need to hand it off" - the spec designers wanted that handoff to happen immediately, before the browser does anything else (like rendering or running a timer).
+
+Macrotasks (setTimeout, setInterval, DOM events) = lower-priority, can-wait-its-turn work, since setTimeout is inherently about SCHEDULING something for later, not competing for immediate priority.
+
+Practical consequence: if Promises shared the same queue as setTimeout callbacks, pending timers could delay already-finished async data from being processed, even though that data was ready right now. Giving Promises their own faster lane avoids that unnecessary delay.
+
+Interview-ready one-liner: "Promises are treated as microtasks because they represent work that just finished and should be handled immediately, while setTimeout is a macrotask because it's explicitly about waiting/scheduling for later - so the spec gives Promises a faster, priority queue that runs before the regular one."
+
+**Q: Does JS's own fast, synchronous code get added to the callback queue too?**
+
+A: No. Regular synchronous code (console.log, math, variable assignments, normal function calls) runs directly on the Call Stack immediately, top to bottom - it never touches any queue at all. Only async operations (setTimeout, Promises, network requests) get handed to the background, and only THEIR callback functions end up in a queue once finished, waiting for their turn to run.
 
 ## Key takeaway (in my own words)
 

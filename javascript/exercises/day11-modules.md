@@ -67,24 +67,6 @@ export default function square(x) {
 import square, { PI } from "./utils.js";
 ```
 
-## My practice exercise
-
-Given:
-```js
-// shapes.js
-export function circleArea(r) { return 3.14 * r * r; }
-export default function square(x) { return x * x; }
-```
-
-**Mistake made:** initially wrote `import {circleArea}, squareOf from "./shape.js"` - had the order backwards (named import listed first, default listed second and unwrapped). Corrected to match the actual rule: default import first (renamed freely), then named import in `{ }` second.
-
-**Correct answer:**
-```js
-import squareOf, { circleArea } from "./shapes.js";
-```
-
-`squareOf` is a freely chosen name for the default export (originally `square` in the file). `{ circleArea }` is the named export and must match its exported name exactly - unless using `as` to rename it (e.g. `{ circleArea as area }`), but the original name must still appear on the left side of `as`.
-
 ## Renaming with "as"
 
 **Export-side renaming** - changes the name PERMANENTLY for anyone importing from that file:
@@ -118,8 +100,6 @@ import { add as sum } from "./mathUtils.js";
 console.log(sum(2, 3)); // 5
 ```
 
-Both are relatively rare in real code compared to plain named/default imports, but good to recognize.
-
 **Namespace import** - importing everything from a file as one object:
 ```js
 import * as MathUtils from "./mathUtils.js";
@@ -145,6 +125,32 @@ import { add } from "../mathUtils.js";
 import { add } from "./utils/mathUtils.js";
 ```
 
+## My practice exercise
+
+Given:
+```js
+// shapes.js
+export function circleArea(r) { return 3.14 * r * r; }
+export default function square(x) { return x * x; }
+```
+
+**Correct answer:**
+```js
+import squareOf, { circleArea } from "./shapes.js";
+```
+
+`squareOf` is a freely chosen name for the default export (originally `square` in the file). `{ circleArea }` is the named export and must match its exported name exactly - unless using `as` to rename it, but the original name must still appear on the left side of `as`.
+
+## Doubts / Questions I had
+
+**Q: What's the correct order when importing both a default and named export in one line?**
+
+A: Initially wrote `import {circleArea}, squareOf from "./shape.js"` - had the order backwards (named import listed first, default listed second and unwrapped). The actual rule: default import comes FIRST, unmarked, then named imports follow inside `{ }`, separated by a comma. Corrected to `import squareOf, { circleArea } from "./shapes.js";`.
+
+**Q: Does the export/import naming change based on file location (./  vs  ../)?**
+
+A: These are two separate concerns. Naming (named vs default, renaming with `as`) is about WHAT gets imported and what it's called. File paths (`./`, `../`, `./utils/`) are about WHERE the file physically lives relative to the importing file - purely about location, has nothing to do with export naming rules. Getting the path wrong causes a "module not found" error regardless of whether the import names are correct.
+
 ## Key takeaway (in my own words)
 
-Named exports let a file export multiple things, and importing them requires matching the exact name inside `{ }`. Default exports allow exactly one per file, imported without `{ }` and can be freely renamed on the importing side. When combining both in one import line, the default import always comes first, followed by a comma and the named imports in `{ }`.
+Named exports let a file export multiple things, and importing them requires matching the exact name inside `{ }`. Default exports allow exactly one per file, imported without `{ }` and can be freely renamed on the importing side. When combining both in one import line, the default import always comes first, followed by a comma and the named imports in `{ }`. File paths are a separate concern from naming - purely about physical file location relative to the importing file.
