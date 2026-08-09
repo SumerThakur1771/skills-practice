@@ -106,19 +106,6 @@ coordinates = [10, 20, 30]; // Error - too many items, expected exactly 2
 coordinates = ["10", 20];   // Error - first position must be number
 ```
 
-**Important: tuples need EXPLICIT typing to get the fixed-length guarantee.** Without an explicit type annotation, TypeScript infers a plain array (`number[]`), NOT a tuple, even if it happens to have exactly 2 items at that moment:
-
-```ts
-let coordinates = [10, 20]; // inferred as number[] (flexible array), NOT a tuple
-coordinates.push(30);        // ALLOWED - number[] can be any length
-console.log(coordinates);    // [10, 20, 30]
-
-let point: [number, number] = [10, 20]; // explicitly typed tuple
-point = [10, 20, 30]; // Error - blocked, expected exactly 2 elements
-```
-
-Just because an array happens to have a certain number of items when written doesn't make TypeScript treat it as a tuple - the fixed-length enforcement only applies when explicitly declared as a tuple type.
-
 ## any vs unknown
 
 Both represent "could be any type," but they differ in ENFORCEMENT, not possibility.
@@ -140,8 +127,6 @@ if (typeof notSure === "string") {
 }
 ```
 
-**The key distinction:** with `any`, a safety check could be added manually, but TypeScript never requires it - if forgotten, broken code slips through silently until it crashes at runtime. With `unknown`, TypeScript makes the check MANDATORY - it's not optional developer discipline, the compiler physically won't allow risky usage until the type is narrowed down first.
-
 ## void vs never
 
 **void** - function doesn't return anything meaningful, but completes normally:
@@ -159,15 +144,54 @@ function throwError(message: string): never {
 }
 ```
 
-**The distinguishing test:** does the function have ANY path that completes normally? If yes (even alongside a throw path), it's `void`. If EVERY path always throws or never terminates, it's `never`.
+## Doubts / Questions I had
 
+**Q: In `function double(num: number): number`, why is there `: number` twice - is the second one because the return type should be a number too?**
+
+A: Yes, exactly. Two separate type annotations in one line: `num: number` types the PARAMETER (what must be passed in), and `: number` right after the closing `)` types the RETURN VALUE (what the function must give back). TypeScript checks both independently - they can even be different types, like a function taking a string and returning a number:
 ```ts
-// void - has a path that completes normally (valid input case)
+function getLength(text: string): number {
+  return text.length;
+}
+```
+
+**Q: I wrote `let coordinates = [10, 20];` (no explicit type) - isn't this already a fixed length of 2, so wouldn't it act like a tuple?**
+
+A: No - without an explicit type annotation, TypeScript infers this as `number[]` (a regular, flexible array), NOT a tuple, regardless of how many items happen to be there at that moment.
+```ts
+let coordinates = [10, 20]; // inferred as number[], NOT a tuple
+coordinates.push(30);        // ALLOWED - number[] can be any length
+```
+Tuples only get their strict "fixed length, specific type per position" enforcement when EXPLICITLY declared as a tuple type:
+```ts
+let point: [number, number] = [10, 20]; // explicitly typed tuple
+point = [10, 20, 30]; // Error - blocked, expected exactly 2 elements
+```
+Just because an array happens to have a certain number of items when written doesn't make TypeScript treat it as a tuple - the guarantee only applies with explicit typing.
+
+**Q: `unknown` still needs a manually-added safety check to use it - isn't that the same as `any`, since I could add a check with `any` too?**
+
+A: The difference is ENFORCEMENT, not possibility. With `any`, nothing REQUIRES a check - TypeScript lets risky usage through with zero warning even if wrong:
+```ts
+let anything: any = fetchSomeData();
+anything.toUpperCase(); // compiles fine, no warning, even if it's actually a number - crashes at runtime
+```
+With `unknown`, TypeScript actively BLOCKS usage until the type is proven - it's not optional developer discipline:
+```ts
+let notSure: unknown = fetchSomeData();
+notSure.toUpperCase(); // Error - refuses to compile until narrowed with a check like typeof
+```
+`any` = "trust me, I'll be careful" (nothing stops you if not). `unknown` = "prove it first" (the compiler physically won't let the risky line compile without narrowing first).
+
+**Q: Would a function that validates input and throws on invalid input, but otherwise just returns nothing, be `void` or `never`?**
+
+A: `void` - because it has at least one path that completes normally (the valid-input case). `never` is reserved for functions where EVERY possible path throws or never terminates - no path ever completes successfully. The test: does the function have ANY path that finishes normally? If yes (even alongside a throw path), it's void.
+```ts
 function validateInput(input: string): void {
   if (!input) {
-    throw new Error("Input cannot be empty"); // one possible path
+    throw new Error("Input cannot be empty"); // one path
   }
-  console.log("Valid input"); // the OTHER path - completes normally, returns nothing
+  console.log("Valid input"); // the OTHER path - completes normally
 }
 ```
 
