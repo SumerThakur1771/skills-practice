@@ -102,13 +102,23 @@ Interfaces make sense when a shape might need to be extended/added to later (sca
 
 **Interview-ready answer:** "Interfaces and type aliases are almost interchangeable for simple object shapes. The real differences: interfaces support declaration merging and are extended with extends; type aliases use & for combining and can represent non-object types like unions, which interfaces cannot. Many teams default to interface for object shapes and type for everything else, but it's largely a style/convention choice for simple cases."
 
+## Doubts / Questions I had
+
+**Q: Both interface and type seem useful in different scenarios - when would each actually be chosen in real code?**
+
+A: If an object's shape might need properties added later (scaling over time), interface makes more sense since it stays "open" for extension - and declaration merging is genuinely used in real codebases for extending third-party library types (e.g. adding a custom property to Express's Request interface without touching the library's source). If something should be more fixed/sealed and not silently extendable elsewhere in a large codebase, or if it's not a plain object shape at all (unions, primitives), type makes more sense - since type aliases can't accidentally merge with another declaration of the same name.
+
+**Q: Can an interface and a type alias share the same name, since declaration merging works for interfaces?**
+
+A: No - declaration merging only works between MULTIPLE INTERFACES with the same name, not between an interface and a type alias. Initially tried declaring both `interface Book` and `type Book` using the same name `Book` for the practice exercise - this is a naming collision, not merging. They collide because both are trying to claim the same identifier. Fixed by using two different names (Book1, Book2) so both could exist side by side for comparison.
+
+**Q: Do interface properties use commas or semicolons?**
+
+A: Semicolons are the standard convention (commas technically work in some cases, but semicolons are what's expected in real code and interviews) - same separator style as a type alias's object shape.
+
 ## My practice exercise
 
 Goal: write both an interface and type alias called Book (title: string, author: string, pages: number), and create one object using each.
-
-**Mistakes made and fixed:**
-1. Initially declared BOTH an `interface Book` and a `type Book` using the same name `Book` - invalid, since declaration merging only works between multiple interfaces with the same name, not between an interface and a type alias. They collide as a naming conflict. Fixed by using two different names (Book1, Book2) so both could coexist for comparison.
-2. Used commas to separate interface properties instead of semicolons - commas technically work in some cases but semicolons are the standard convention.
 
 **Final correct code:**
 
