@@ -35,3 +35,25 @@ Client (browser/app)  <--- response ---  Server
 **Interview relevance:** often the literal opening question of a system design interview, or implicitly assumed as the foundation before any specific system gets discussed. Base vocabulary everything else (load balancers, caching, CDNs) builds on top of.
 
 ---
+
+## HTTP (HyperText Transfer Protocol)
+
+**WHY it exists:** once a client and server exist, they need a shared, agreed-upon language to communicate - a set of rules for how requests/responses are formatted, what action is being requested, and how to signal success or failure. HTTP provides that.
+
+**HTTP Methods - what kind of action the client wants:**
+- GET - retrieve data (e.g. "give me this user's profile")
+- POST - create new data (e.g. "create a new account")
+- PUT/PATCH - update existing data
+- DELETE - remove data
+
+**Status codes - the server's way of telling the client what happened:**
+- 200 - success
+- 201 - created successfully
+- 400 - bad request (client sent something wrong)
+- 401 - unauthorized (not logged in / invalid credentials)
+- 404 - not found
+- 500 - server error (something broke server-side)
+
+**Connecting to real code:** every API route touched (Velzee's Supabase queries, IronMind's /api/chat, /api/auth/login) is built on this - client sends an HTTP request with a specific method (POST for login, GET for fetching data), server responds with a status code plus a body (usually JSON).
+
+---
