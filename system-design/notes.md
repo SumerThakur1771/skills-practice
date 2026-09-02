@@ -51,9 +51,43 @@ Client (browser/app)  <--- response ---  Server
 - 201 - created successfully
 - 400 - bad request (client sent something wrong)
 - 401 - unauthorized (not logged in / invalid credentials)
+- 403 - forbidden (see distinction below)
 - 404 - not found
 - 500 - server error (something broke server-side)
 
+**401 vs 403 - a commonly confused distinction:**
+
+401 Unauthorized actually means "not AUTHENTICATED" - the server doesn't know who the client is at all. Either not logged in, or credentials/token are missing or invalid. Fix: log in / provide valid credentials.
+
+403 Forbidden means "I know exactly who you are, but you're not ALLOWED to do this." The client IS authenticated (server recognizes them), but their account doesn't have permission for this specific action or resource.
+
+Example: trying to access /admin/dashboard WITHOUT logging in at all -> 401 (server doesn't know who you are yet). Trying to access /admin/dashboard while logged in as a regular non-admin user -> 403 (server knows exactly who you are, but you're not allowed in).
+
+Note on naming: "401 Unauthorized" sounds like it should mean "not authorized to do this action," but it actually means "not authenticated" - a widely acknowledged naming quirk in the HTTP spec itself, not a misunderstanding. Many experienced developers get this backwards at first.
+
+Simple way to remember: 401 = "Who are you?" (identity problem, not logged in / bad credentials). 403 = "I know who you are, but no." (permission problem, logged in but not allowed).
+
 **Connecting to real code:** every API route touched (Velzee's Supabase queries, IronMind's /api/chat, /api/auth/login) is built on this - client sends an HTTP request with a specific method (POST for login, GET for fetching data), server responds with a status code plus a body (usually JSON).
+
+---
+
+## REST (Representational State Transfer)
+
+**WHY it exists:** HTTP gives the basic tools (methods, status codes) for client-server communication, but doesn't dictate HOW to organize an API - what URLs should look like, how to structure requests for different actions. REST is a set of conventions for designing APIs in a consistent, predictable way.
+
+**The core idea:** REST organizes an API around RESOURCES (nouns, like "users," "posts," "signups") and uses HTTP methods to describe actions on them.
+
+```
+GET    /users        -> get all users
+GET    /users/5      -> get user with id 5
+POST   /users        -> create a new user
+PUT    /users/5      -> update user 5 (replace entirely)
+PATCH  /users/5      -> update user 5 (partial update)
+DELETE /users/5      -> delete user 5
+```
+
+The URL identifies WHAT is being acted on (a resource), and the HTTP method identifies WHAT ACTION to take - not verbs baked into the URL itself (not /getUser/5 or /deleteUser/5 in a RESTful API).
+
+**Connecting to real code:** IronMind's /api/chat, /api/auth/login are REST-style API routes. The WHOOP LoginForm's onSubmit prop conceptually represents what would eventually hit an endpoint like POST /login in a real app.
 
 ---
